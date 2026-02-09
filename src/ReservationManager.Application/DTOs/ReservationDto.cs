@@ -6,7 +6,6 @@ public record ReservationDto(
     Guid Id,
     Guid TableId,
     string CustomerName,
-    DateTime ReservationDate,
-    float DurationHours,
-    ReservationStatus Status
-);
+    DateTime Date,
+    double Duration,
+    ReservationStatus Status);

@@ -8,7 +8,7 @@ public class CreateReservationCommandValidator : AbstractValidator<CreateReserva
     {
         RuleFor(x => x.TableId)
             .NotEmpty()
-            .WithMessage("Table ID is required.");
+            .WithMessage("Table Id is required.");
 
         RuleFor(x => x.CustomerName)
             .NotEmpty()
@@ -18,7 +18,7 @@ public class CreateReservationCommandValidator : AbstractValidator<CreateReserva
             .NotEmpty()
             .WithMessage("Customer email is required.")
             .EmailAddress()
-            .WithMessage("Invalid email address format.");
+            .WithMessage("Customer email must be a valid email address.");
 
         RuleFor(x => x.CustomerPhone)
             .NotEmpty()
@@ -29,16 +29,7 @@ public class CreateReservationCommandValidator : AbstractValidator<CreateReserva
             .WithMessage("Reservation date must be in the future.");
 
         RuleFor(x => x.DurationHours)
-            .InclusiveBetween(1f, 3f)
+            .InclusiveBetween(1, 3)
             .WithMessage("Duration must be between 1 and 3 hours.");
-
-        RuleFor(x => x.DurationHours)
-            .Must(BeValidIncrement)
-            .WithMessage("Duration must be in 0.5 hour increments.");
-    }
-
-    private bool BeValidIncrement(float duration)
-    {
-        return (duration * 2) % 1 == 0;
     }
 }
