@@ -1,0 +1,27 @@
+services:
+  reservation_db:
+    image: postgres:16-alpine
+    container_name: reservation_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: reservation_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  reservation_mq:
+    image: rabbitmq:3-management
+    container_name: reservation_mq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    restart: unless-stopped
+
+volumes:
+  pgdata:
