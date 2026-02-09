@@ -8,7 +8,7 @@ public class Reservation
     public string CustomerEmail { get; private set; }
     public string CustomerPhone { get; private set; }
     public DateTime ReservationDate { get; private set; }
-    public int DurationHours { get; private set; }
+    public float DurationHours { get; private set; }
     public ReservationStatus Status { get; private set; }
 
     private Reservation() { }
@@ -20,7 +20,7 @@ public class Reservation
         string customerEmail,
         string customerPhone,
         DateTime reservationDate,
-        int durationHours)
+        float durationHours)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("Id cannot be empty.", nameof(id));
