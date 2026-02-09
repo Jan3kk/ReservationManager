@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ReservationManager.Api/ReservationManager.Api.csproj" />
+    <Project Path="src/ReservationManager.Application/ReservationManager.Application.csproj" />
+    <Project Path="src/ReservationManager.Domain/ReservationManager.Domain.csproj" />
+    <Project Path="src/ReservationManager.Infrastructure/ReservationManager.Infrastructure.csproj" />
+  </Folder>
+</Solution>
