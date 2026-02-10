@@ -7,14 +7,25 @@ namespace ReservationManager.Application.Features.Reservations.Commands.CreateRe
 public class CreateReservationCommandHandler : IRequestHandler<CreateReservationCommand, Guid>
 {
     private readonly IReservationRepository _reservationRepository;
+    private readonly ITableRepository _tableRepository;
 
-    public CreateReservationCommandHandler(IReservationRepository reservationRepository)
+    public CreateReservationCommandHandler(
+        IReservationRepository reservationRepository,
+        ITableRepository tableRepository)
     {
         _reservationRepository = reservationRepository;
+        _tableRepository = tableRepository;
     }
 
     public async Task<Guid> Handle(CreateReservationCommand request, CancellationToken cancellationToken)
     {
+        var tableExists = await _tableRepository.ExistsAsync(request.TableId);
+
+        if (!tableExists)
+        {
+            throw new InvalidOperationException($"Table with ID '{request.TableId}' does not exist.");
+        }
+
         var reservationStart = request.ReservationDate;
         var reservationEnd = reservationStart.AddHours(request.DurationHours);
 

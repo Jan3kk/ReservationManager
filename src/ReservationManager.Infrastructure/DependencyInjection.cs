@@ -17,6 +17,7 @@ public static class DependencyInjection
             options.UseNpgsql(configuration.GetConnectionString("Database")));
 
         services.AddScoped<IReservationRepository, ReservationRepository>();
+        services.AddScoped<ITableRepository, TableRepository>();
 
         services.AddMassTransit(x =>
         {

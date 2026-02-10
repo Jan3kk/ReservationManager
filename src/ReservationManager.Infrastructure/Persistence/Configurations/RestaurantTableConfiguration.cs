@@ -16,10 +16,10 @@ public class RestaurantTableConfiguration : IEntityTypeConfiguration<RestaurantT
             .HasColumnName("id")
             .IsRequired();
 
-        builder.Property(t => t.TableNumber)
-            .HasColumnName("table_number")
+        builder.Property(t => t.Name)
+            .HasColumnName("name")
             .IsRequired()
-            .HasMaxLength(10);
+            .HasMaxLength(100);
 
         builder.Property(t => t.Capacity)
             .HasColumnName("capacity")
