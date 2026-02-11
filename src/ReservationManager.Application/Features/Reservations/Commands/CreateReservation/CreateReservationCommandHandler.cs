@@ -93,7 +93,8 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
             customerEmail: request.CustomerEmail,
             customerPhone: request.CustomerPhone,
             reservationDate: reservationDateTime,
-            durationHours: request.DurationHours);
+            durationHours: request.DurationHours,
+            partySize: request.PartySize);
 
         var reservationId = await _reservationRepository.AddAsync(reservation);
 

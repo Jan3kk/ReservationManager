@@ -9,6 +9,7 @@ public class Reservation
     public string CustomerPhone { get; private set; }
     public DateTime ReservationDate { get; private set; }
     public float DurationHours { get; private set; }
+    public int PartySize { get; private set; }
     public ReservationStatus Status { get; private set; }
 
     private Reservation() { }
@@ -20,7 +21,8 @@ public class Reservation
         string customerEmail,
         string customerPhone,
         DateTime reservationDate,
-        float durationHours)
+        float durationHours,
+        int partySize)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("Id cannot be empty.", nameof(id));
@@ -46,6 +48,9 @@ public class Reservation
         if ((durationHours * 2) % 1 != 0)
             throw new ArgumentException("Duration must be in 0.5 hour increments.", nameof(durationHours));
 
+        if (partySize < 1)
+            throw new ArgumentOutOfRangeException(nameof(partySize), "Party size must be at least 1.");
+
         Id = id;
         TableId = tableId;
         CustomerName = customerName;
@@ -53,6 +58,7 @@ public class Reservation
         CustomerPhone = customerPhone;
         ReservationDate = reservationDate;
         DurationHours = durationHours;
+        PartySize = partySize;
         Status = ReservationStatus.Pending;
     }
 

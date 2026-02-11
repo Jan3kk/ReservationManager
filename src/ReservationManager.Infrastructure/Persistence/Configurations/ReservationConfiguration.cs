@@ -44,6 +44,10 @@ public class ReservationConfiguration : IEntityTypeConfiguration<Reservation>
             .HasColumnType("real")
             .IsRequired();
 
+        builder.Property(r => r.PartySize)
+            .HasColumnName("party_size")
+            .IsRequired();
+
         builder.Property(r => r.Status)
             .HasColumnName("status")
             .HasConversion<string>()
