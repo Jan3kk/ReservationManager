@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ReservationManager.Application.Abstractions.Repositories;
-using ReservationManager.Infrastructure.Messaging.Consumers;
 using ReservationManager.Infrastructure.Persistence;
 using ReservationManager.Infrastructure.Repositories;
 
@@ -21,7 +20,7 @@ public static class DependencyInjection
 
         services.AddMassTransit(x =>
         {
-            x.AddConsumer<ReservationRequestConsumer>();
+            // TODO: Add new Smart Allocation consumer when implemented
 
             x.UsingRabbitMq((context, cfg) =>
             {
