@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using ReservationManager.Application.Features.Reservations.Commands.CreateReservation;
 
 namespace ReservationManager.Api.Controllers;
 
@@ -12,6 +13,17 @@ public class ReservationsController : ControllerBase
     public ReservationsController(ISender sender)
     {
         _sender = sender;
+    }
+
+    [HttpPost]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Create([FromBody] CreateReservationCommand command)
+    {
+        var reservationId = await _sender.Send(command);
+
+        return CreatedAtAction(nameof(GetById), new { id = reservationId }, reservationId);
     }
 
     [HttpGet("{id:guid}")]
