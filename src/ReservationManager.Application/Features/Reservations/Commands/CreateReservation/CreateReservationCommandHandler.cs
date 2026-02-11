@@ -35,6 +35,7 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
             .OrderBy(t => t.Capacity)
             .ToList();
 
+        var requestedSlotStart = request.StartTime;
         var requestedSlotEnd = request.StartTime + TimeSpan.FromHours(request.DurationHours);
 
         RestaurantTable? selectedTable = null;
@@ -51,17 +52,30 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
                 table,
                 request.Date);
 
-            var matchingSlot = validSlots.FirstOrDefault(slot =>
-                slot.Start <= request.StartTime && 
-                requestedSlotEnd <= slot.End + TimeSpan.FromHours(request.DurationHours - (float)slot.Duration.TotalHours));
+            var isValidStartTime = validSlots.Any(slot => slot.Start == requestedSlotStart);
 
-            var isValidStartTime = validSlots.Any(slot => slot.Start == request.StartTime);
-
-            if (isValidStartTime)
+            if (!isValidStartTime)
             {
-                selectedTable = table;
-                break;
+                continue;
             }
+
+            var hasOverlap = existingReservations
+                .Where(r => r.Status != ReservationStatus.Rejected)
+                .Any(r =>
+                {
+                    var existingStart = r.ReservationDate.TimeOfDay;
+                    var existingEnd = existingStart + TimeSpan.FromHours(r.DurationHours);
+
+                    return existingStart < requestedSlotEnd && existingEnd > requestedSlotStart;
+                });
+
+            if (hasOverlap)
+            {
+                continue;
+            }
+
+            selectedTable = table;
+            break;
         }
 
         if (selectedTable is null)
