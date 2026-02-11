@@ -22,8 +22,8 @@ public class AvailabilityService
         var validSlots = new List<TimeSlot>();
 
         var reservationsForDate = existingReservations
-            .Where(r => r.ReservationDate.Date == date.Date && r.Status != ReservationStatus.Rejected)
-            .OrderBy(r => r.ReservationDate)
+            .Where(r => r.ReservationDate.Date == date.Date
+                && r.Status != ReservationStatus.Rejected)
             .ToList();
 
         var reservationWindows = reservationsForDate
@@ -34,7 +34,8 @@ public class AvailabilityService
 
         var currentSlotStart = RestaurantSettings.OpenTime;
 
-        while (currentSlotStart + RestaurantSettings.MinBookingDuration <= RestaurantSettings.CloseTime)
+        while (currentSlotStart + RestaurantSettings.MinBookingDuration
+            <= RestaurantSettings.CloseTime)
         {
             var candidateEnd = currentSlotStart + RestaurantSettings.MinBookingDuration;
 
