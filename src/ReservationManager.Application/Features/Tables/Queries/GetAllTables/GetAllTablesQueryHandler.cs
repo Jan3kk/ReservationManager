@@ -18,7 +18,7 @@ public class GetAllTablesQueryHandler : IRequestHandler<GetAllTablesQuery, List<
         var tables = await _tableRepository.GetAllAsync();
 
         return tables
-            .Select(t => new TableDto(t.Id, t.Name, t.Capacity))
+            .Select(t => new TableDto(t.Id, t.UniqueName, t.Label, t.Capacity))
             .ToList();
     }
 }

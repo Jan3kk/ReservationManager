@@ -19,7 +19,7 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
 
     public async Task<Guid> Handle(CreateReservationCommand request, CancellationToken cancellationToken)
     {
-        var tableExists = await _tableRepository.ExistsAsync(request.TableId);
+        var tableExists = await _tableRepository.ExistsByGuidAsync(request.TableId);
 
         if (!tableExists)
         {

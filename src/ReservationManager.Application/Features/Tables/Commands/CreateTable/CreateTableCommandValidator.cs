@@ -6,9 +6,13 @@ public class CreateTableCommandValidator : AbstractValidator<CreateTableCommand>
 {
     public CreateTableCommandValidator()
     {
-        RuleFor(x => x.Name)
+        RuleFor(x => x.UniqueName)
             .NotEmpty()
-            .WithMessage("Name is required.");
+            .WithMessage("UniqueName is required.");
+
+        RuleFor(x => x.Label)
+            .NotEmpty()
+            .WithMessage("Label is required.");
 
         RuleFor(x => x.Capacity)
             .InclusiveBetween(2, 10)

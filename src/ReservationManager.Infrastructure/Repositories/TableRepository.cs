@@ -35,10 +35,16 @@ public class TableRepository : ITableRepository
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
-    public async Task<bool> ExistsAsync(Guid id)
+    public async Task<bool> ExistsByGuidAsync(Guid id)
     {
         return await _context.Tables
             .AnyAsync(t => t.Id == id);
+    }
+
+    public async Task<bool> IsUniqueNameTakenAsync(string uniqueName)
+    {
+        return await _context.Tables
+            .AnyAsync(t => t.UniqueName == uniqueName);
     }
 
     public async Task DeleteAsync(Guid id)

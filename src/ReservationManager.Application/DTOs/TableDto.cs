@@ -1,3 +1,3 @@
 namespace ReservationManager.Application.DTOs;
 
-public record TableDto(Guid Id, string Name, int Capacity);
+public record TableDto(Guid Id, string UniqueName, string Label, int Capacity);

@@ -16,8 +16,16 @@ public class RestaurantTableConfiguration : IEntityTypeConfiguration<RestaurantT
             .HasColumnName("id")
             .IsRequired();
 
-        builder.Property(t => t.Name)
-            .HasColumnName("name")
+        builder.Property(t => t.UniqueName)
+            .HasColumnName("unique_name")
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.HasIndex(t => t.UniqueName)
+            .IsUnique();
+
+        builder.Property(t => t.Label)
+            .HasColumnName("label")
             .IsRequired()
             .HasMaxLength(100);
 

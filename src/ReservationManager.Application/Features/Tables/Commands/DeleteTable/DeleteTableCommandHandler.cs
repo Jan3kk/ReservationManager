@@ -14,7 +14,7 @@ public class DeleteTableCommandHandler : IRequestHandler<DeleteTableCommand>
 
     public async Task Handle(DeleteTableCommand request, CancellationToken cancellationToken)
     {
-        var exists = await _tableRepository.ExistsAsync(request.Id);
+        var exists = await _tableRepository.ExistsByGuidAsync(request.Id);
 
         if (!exists)
         {

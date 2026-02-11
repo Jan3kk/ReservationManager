@@ -15,9 +15,17 @@ public class CreateTableCommandHandler : IRequestHandler<CreateTableCommand, Gui
 
     public async Task<Guid> Handle(CreateTableCommand request, CancellationToken cancellationToken)
     {
+        var isUniqueNameTaken = await _tableRepository.IsUniqueNameTakenAsync(request.UniqueName);
+
+        if (isUniqueNameTaken)
+        {
+            throw new InvalidOperationException($"A table with unique name '{request.UniqueName}' already exists.");
+        }
+
         var table = new RestaurantTable(
             id: Guid.NewGuid(),
-            name: request.Name,
+            uniqueName: request.UniqueName,
+            label: request.Label,
             capacity: request.Capacity);
 
         var tableId = await _tableRepository.AddAsync(table);
