@@ -35,6 +35,14 @@ public class TableRepository : ITableRepository
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
+    public async Task<List<RestaurantTable>> GetByCapacityAsync(int minCapacity)
+    {
+        return await _context.Tables
+            .AsNoTracking()
+            .Where(t => t.Capacity >= minCapacity)
+            .ToListAsync();
+    }
+
     public async Task<bool> ExistsByGuidAsync(Guid id)
     {
         return await _context.Tables

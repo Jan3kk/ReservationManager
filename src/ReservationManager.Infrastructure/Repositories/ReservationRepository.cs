@@ -28,6 +28,14 @@ public class ReservationRepository : IReservationRepository
             .FirstOrDefaultAsync(r => r.Id == id);
     }
 
+    public async Task<List<Reservation>> GetByTableAndDateAsync(Guid tableId, DateTime date)
+    {
+        return await _context.Reservations
+            .AsNoTracking()
+            .Where(r => r.TableId == tableId && r.ReservationDate.Date == date.Date)
+            .ToListAsync();
+    }
+
     public async Task<bool> IsOverlapAsync(Guid tableId, DateTime start, DateTime end)
     {
         var reservations = await _context.Reservations
