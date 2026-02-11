@@ -4,6 +4,7 @@ using ReservationManager.Application.DTOs;
 using ReservationManager.Application.Features.Tables.Commands.CreateTable;
 using ReservationManager.Application.Features.Tables.Commands.DeleteTable;
 using ReservationManager.Application.Features.Tables.Queries.GetAllTables;
+using ReservationManager.Application.Features.Tables.Queries.GetTableById;
 
 namespace ReservationManager.Api.Controllers;
 
