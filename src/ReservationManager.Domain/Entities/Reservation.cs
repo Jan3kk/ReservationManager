@@ -4,9 +4,9 @@ public class Reservation
 {
     public Guid Id { get; private set; }
     public Guid TableId { get; private set; }
-    public string CustomerName { get; private set; }
-    public string CustomerEmail { get; private set; }
-    public string CustomerPhone { get; private set; }
+    public string CustomerName { get; private set; } = string.Empty;
+    public string CustomerEmail { get; private set; } = string.Empty;
+    public string CustomerPhone { get; private set; } = string.Empty;
     public DateTime ReservationDate { get; private set; }
     public float DurationHours { get; private set; }
     public int PartySize { get; private set; }

@@ -3,8 +3,8 @@ namespace ReservationManager.Domain.Entities;
 public class RestaurantTable
 {
     public Guid Id { get; private set; }
-    public string UniqueName { get; private set; }
-    public string Label { get; private set; }
+    public string UniqueName { get; private set; } = string.Empty;
+    public string Label { get; private set; } = string.Empty;
     public int Capacity { get; private set; }
 
     private RestaurantTable() { }
