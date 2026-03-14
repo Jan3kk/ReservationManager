@@ -32,19 +32,28 @@ public class AvailabilityService
                 r.ReservationDate.TimeOfDay + TimeSpan.FromHours(r.DurationHours)))
             .ToList();
 
-        var currentSlotStart = RestaurantSettings.OpenTime;
+        var currentTime = RestaurantSettings.OpenTime;
 
-        while (currentSlotStart + RestaurantSettings.MinBookingDuration
+        while (currentTime + RestaurantSettings.MinBookingDuration
             <= RestaurantSettings.CloseTime)
         {
-            var candidateEnd = currentSlotStart + RestaurantSettings.MinBookingDuration;
+            var slotDateTime = date.Date + currentTime;
+            var minAllowedDateTime = DateTime.Now.Add(RestaurantSettings.MinAdvanceBookingTime);
 
-            if (IsSlotValid(currentSlotStart, candidateEnd, reservationWindows))
+            if (slotDateTime < minAllowedDateTime)
             {
-                validSlots.Add(new TimeSlot(currentSlotStart, candidateEnd));
+                currentTime += RestaurantSettings.SlotInterval;
+                continue;
             }
 
-            currentSlotStart += RestaurantSettings.SlotInterval;
+            var candidateEnd = currentTime + RestaurantSettings.MinBookingDuration;
+
+            if (IsSlotValid(currentTime, candidateEnd, reservationWindows))
+            {
+                validSlots.Add(new TimeSlot(currentTime, candidateEnd));
+            }
+
+            currentTime += RestaurantSettings.SlotInterval;
         }
 
         return validSlots;

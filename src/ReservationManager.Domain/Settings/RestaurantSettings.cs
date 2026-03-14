@@ -14,7 +14,7 @@ public static class RestaurantSettings
 
     public static TimeSpan DurationIncrement => TimeSpan.FromMinutes(30);
 
-    public static TimeSpan MinAdvanceBookingTime => TimeSpan.FromHours(3);
+    public static TimeSpan MinAdvanceBookingTime = TimeSpan.FromHours(2);
 
     public static int MinPartySize => 1;
 
