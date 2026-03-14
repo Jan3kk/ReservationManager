@@ -51,6 +51,10 @@ namespace ReservationManager.Infrastructure.Migrations
                         .HasColumnType("real")
                         .HasColumnName("duration_hours");
 
+                    b.Property<int>("PartySize")
+                        .HasColumnType("integer")
+                        .HasColumnName("party_size");
+
                     b.Property<DateTime>("ReservationDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("reservation_date");
