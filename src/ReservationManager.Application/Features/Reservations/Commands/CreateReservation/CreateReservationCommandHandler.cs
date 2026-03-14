@@ -35,6 +35,16 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
             .OrderBy(t => t.Capacity)
             .ToList();
 
+        var tableIds = sortedTables
+            .Select(t => t.Id)
+            .ToList();
+
+        var allReservations = await _reservationRepository.GetByTableIdsAndDateAsync(
+            tableIds,
+            request.Date);
+
+        var reservationsByTable = allReservations.ToLookup(r => r.TableId);
+
         var requestedSlotStart = request.StartTime;
         var requestedSlotEnd = request.StartTime + TimeSpan.FromHours(request.DurationHours);
 
@@ -42,9 +52,7 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
 
         foreach (var table in sortedTables)
         {
-            var existingReservations = await _reservationRepository.GetByTableAndDateAsync(
-                table.Id,
-                request.Date);
+            var existingReservations = reservationsByTable[table.Id].ToList();
 
             var validSlots = _availabilityService.GetValidTimeSlots(
                 existingReservations,

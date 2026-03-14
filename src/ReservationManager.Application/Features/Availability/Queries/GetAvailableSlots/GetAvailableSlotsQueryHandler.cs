@@ -40,13 +40,21 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
             return [];
         }
 
+        var tableIds = suitableTables
+            .Select(t => t.Id)
+            .ToList();
+
+        var allReservations = await _reservationRepository.GetByTableIdsAndDateAsync(
+            tableIds,
+            request.Date);
+
+        var reservationsByTable = allReservations.ToLookup(r => r.TableId);
+
         var uniqueSlots = new HashSet<TimeSlotDto>();
 
         foreach (var table in suitableTables)
         {
-            var existingReservations = await _reservationRepository.GetByTableAndDateAsync(
-                table.Id,
-                request.Date);
+            var existingReservations = reservationsByTable[table.Id].ToList();
 
             var validSlots = _availabilityService.GetValidTimeSlots(
                 existingReservations,
