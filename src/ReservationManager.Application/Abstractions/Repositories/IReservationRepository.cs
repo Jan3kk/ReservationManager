@@ -9,4 +9,5 @@ public interface IReservationRepository
     Task<List<Reservation>> GetByTableAndDateAsync(Guid tableId, DateTime date);
     Task<List<Reservation>> GetByTableIdsAndDateAsync(IEnumerable<Guid> tableIds, DateTime date);
     Task<bool> IsOverlapAsync(Guid tableId, DateTime start, DateTime end);
+    Task<bool> HasAnyForTableAsync(Guid tableId);
 }

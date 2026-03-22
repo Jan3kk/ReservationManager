@@ -59,4 +59,9 @@ public class ReservationRepository : IReservationRepository
 
         return hasOverlap;
     }
+
+    public async Task<bool> HasAnyForTableAsync(Guid tableId)
+    {
+        return await _context.Reservations.AnyAsync(r => r.TableId == tableId);
+    }
 }

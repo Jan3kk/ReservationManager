@@ -53,5 +53,10 @@ public class ReservationConfiguration : IEntityTypeConfiguration<Reservation>
             .HasConversion<string>()
             .IsRequired()
             .HasMaxLength(20);
+
+        builder.HasOne<RestaurantTable>()
+            .WithMany()
+            .HasForeignKey(r => r.TableId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
