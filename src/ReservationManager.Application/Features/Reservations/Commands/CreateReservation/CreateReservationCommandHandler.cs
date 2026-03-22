@@ -1,5 +1,6 @@
 using MediatR;
 using ReservationManager.Application.Abstractions.Repositories;
+using ReservationManager.Application.Exceptions;
 using ReservationManager.Domain.Entities;
 using ReservationManager.Domain.Services;
 
@@ -27,7 +28,7 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
 
         if (suitableTables.Count == 0)
         {
-            throw new InvalidOperationException(
+            throw new ConflictException(
                 "No suitable table available for the selected time and party size.");
         }
 
@@ -39,9 +40,11 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
             .Select(t => t.Id)
             .ToList();
 
+        var reservationDayUtc = DateTime.SpecifyKind(request.Date.Date, DateTimeKind.Utc);
+
         var allReservations = await _reservationRepository.GetByTableIdsAndDateAsync(
             tableIds,
-            request.Date);
+            reservationDayUtc);
 
         var reservationsByTable = allReservations.ToLookup(r => r.TableId);
 
@@ -58,9 +61,11 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
                 existingReservations,
                 request.PartySize,
                 table,
-                request.Date);
+                reservationDayUtc,
+                request.DurationHours);
 
-            var isValidStartTime = validSlots.Any(slot => slot.Start == requestedSlotStart);
+            var isValidStartTime = validSlots.Any(slot =>
+                slot.Start == requestedSlotStart && slot.End == requestedSlotEnd);
 
             if (!isValidStartTime)
             {
@@ -88,11 +93,13 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
 
         if (selectedTable is null)
         {
-            throw new InvalidOperationException(
+            throw new ConflictException(
                 "No suitable table available for the selected time and party size.");
         }
 
-        var reservationDateTime = request.Date.Date + request.StartTime;
+        var reservationDateTime = DateTime.SpecifyKind(
+            request.Date.Date + request.StartTime,
+            DateTimeKind.Utc);
 
         var reservation = new Reservation(
             id: Guid.NewGuid(),

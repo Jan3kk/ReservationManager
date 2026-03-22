@@ -1,5 +1,6 @@
 using MediatR;
 using ReservationManager.Application.Abstractions.Repositories;
+using ReservationManager.Application.Exceptions;
 using ReservationManager.Domain.Entities;
 
 namespace ReservationManager.Application.Features.Tables.Commands.CreateTable;
@@ -19,7 +20,7 @@ public class CreateTableCommandHandler : IRequestHandler<CreateTableCommand, Gui
 
         if (isUniqueNameTaken)
         {
-            throw new InvalidOperationException($"A table with unique name '{request.UniqueName}' already exists.");
+            throw new ConflictException($"A table with unique name '{request.UniqueName}' already exists.");
         }
 
         var table = new RestaurantTable(
