@@ -26,7 +26,17 @@ public class TablesController : ControllerBase
     {
         var tableId = await _sender.Send(command);
 
-        return CreatedAtAction(nameof(GetAll), new { id = tableId }, tableId);
+        return CreatedAtAction(nameof(GetById), new { id = tableId }, tableId);
+    }
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(TableDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var table = await _sender.Send(new GetTableByIdQuery(id));
+
+        return Ok(table);
     }
 
     [HttpGet]
@@ -40,6 +50,8 @@ public class TablesController : ControllerBase
 
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _sender.Send(new DeleteTableCommand(id));
