@@ -1,3 +1,5 @@
+using ReservationManager.Domain.Settings;
+
 namespace ReservationManager.Domain.Entities;
 
 public class Reservation
@@ -39,24 +41,35 @@ public class Reservation
         if (string.IsNullOrWhiteSpace(customerPhone))
             throw new ArgumentException("Customer phone cannot be empty.", nameof(customerPhone));
 
-        if (reservationDate <= DateTime.UtcNow)
+        var utcReservationDate = NormalizeToUtc(reservationDate);
+
+        if (utcReservationDate <= DateTime.UtcNow)
             throw new ArgumentException("Reservation date must be in the future.", nameof(reservationDate));
 
-        if (durationHours < 1 || durationHours > 3)
-            throw new ArgumentOutOfRangeException(nameof(durationHours), "Duration must be between 1 and 3 hours.");
+        var minDurationHours = (float)RestaurantSettings.MinBookingDuration.TotalHours;
+        var maxDurationHours = (float)RestaurantSettings.MaxBookingDuration.TotalHours;
 
-        if ((durationHours * 2) % 1 != 0)
-            throw new ArgumentException("Duration must be in 0.5 hour increments.", nameof(durationHours));
+        if (durationHours < minDurationHours || durationHours > maxDurationHours)
+            throw new ArgumentOutOfRangeException(
+                nameof(durationHours),
+                $"Duration must be between {minDurationHours} and {maxDurationHours} hours.");
 
-        if (partySize < 1)
-            throw new ArgumentOutOfRangeException(nameof(partySize), "Party size must be at least 1.");
+        if (!IsDurationOnIncrement(durationHours))
+            throw new ArgumentException(
+                $"Duration must be in {RestaurantSettings.DurationIncrement.TotalMinutes}-minute increments.",
+                nameof(durationHours));
+
+        if (partySize < RestaurantSettings.MinPartySize || partySize > RestaurantSettings.MaxPartySize)
+            throw new ArgumentOutOfRangeException(
+                nameof(partySize),
+                $"Party size must be between {RestaurantSettings.MinPartySize} and {RestaurantSettings.MaxPartySize}.");
 
         Id = id;
         TableId = tableId;
         CustomerName = customerName;
         CustomerEmail = customerEmail;
         CustomerPhone = customerPhone;
-        ReservationDate = reservationDate;
+        ReservationDate = utcReservationDate;
         DurationHours = durationHours;
         PartySize = partySize;
         Status = ReservationStatus.Pending;
@@ -73,5 +86,25 @@ public class Reservation
     public void Reject()
     {
         Status = ReservationStatus.Rejected;
+    }
+
+    private static DateTime NormalizeToUtc(DateTime reservationDate)
+    {
+        if (reservationDate.Kind == DateTimeKind.Utc)
+            return reservationDate;
+
+        if (reservationDate.Kind == DateTimeKind.Local)
+            return reservationDate.ToUniversalTime();
+
+        return DateTime.SpecifyKind(reservationDate, DateTimeKind.Utc);
+    }
+
+    private static bool IsDurationOnIncrement(float durationHours)
+    {
+        var durationMinutes = (double)durationHours * 60.0;
+        var incrementMinutes = RestaurantSettings.DurationIncrement.TotalMinutes;
+        var remainder = durationMinutes % incrementMinutes;
+
+        return remainder < 1e-6 || Math.Abs(remainder - incrementMinutes) < 1e-6;
     }
 }

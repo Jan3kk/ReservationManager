@@ -8,7 +8,7 @@ public class CreateReservationCommandValidator : AbstractValidator<CreateReserva
     public CreateReservationCommandValidator()
     {
         RuleFor(x => x.Date)
-            .GreaterThanOrEqualTo(DateTime.Today)
+            .Must(d => d.Date >= DateTime.UtcNow.Date)
             .WithMessage("Date must be today or in the future.");
 
         RuleFor(x => x)
@@ -50,17 +50,20 @@ public class CreateReservationCommandValidator : AbstractValidator<CreateReserva
 
     private static bool BeAtLeastMinAdvanceBookingTime(CreateReservationCommand command)
     {
-        var reservationDateTime = command.Date.Date + command.StartTime;
-        var minAllowedTime = DateTime.Now + RestaurantSettings.MinAdvanceBookingTime;
+        var reservationDateTime = DateTime.SpecifyKind(
+            command.Date.Date + command.StartTime,
+            DateTimeKind.Utc);
+        var minAllowedTime = DateTime.UtcNow + RestaurantSettings.MinAdvanceBookingTime;
 
         return reservationDateTime >= minAllowedTime;
     }
 
     private static bool BeInValidIncrement(float durationHours)
     {
-        var durationMinutes = durationHours * 60;
+        var durationMinutes = (double)durationHours * 60.0;
         var incrementMinutes = RestaurantSettings.DurationIncrement.TotalMinutes;
+        var remainder = durationMinutes % incrementMinutes;
 
-        return durationMinutes % incrementMinutes == 0;
+        return remainder < 1e-6 || Math.Abs(remainder - incrementMinutes) < 1e-6;
     }
 }
