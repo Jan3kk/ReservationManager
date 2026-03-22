@@ -16,7 +16,7 @@ The project must follow **Modular Monolith / Clean Architecture** principles, pr
 - **Notifications:** Email sent upon reservation confirmation.
 
 ## 3. Technology Stack & Standards
-- **Framework:** .NET 8 (LTS).
+- **Framework:** .NET 10 (LTS).
 - **Database:** PostgreSQL.
 - **ORM:** Entity Framework Core 8 (Code-First).
 - **API Documentation:** Swagger / OpenAPI.
