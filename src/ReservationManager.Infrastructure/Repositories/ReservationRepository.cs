@@ -46,18 +46,22 @@ public class ReservationRepository : IReservationRepository
 
     public async Task<bool> IsOverlapAsync(Guid tableId, DateTime start, DateTime end)
     {
-        var reservations = await _context.Reservations
-            .Where(r => r.TableId == tableId && r.Status != ReservationStatus.Rejected)
-            .Select(r => new
-            {
-                Start = r.ReservationDate,
-                End = r.ReservationDate.AddHours(r.DurationHours)
-            })
+        var dayStart = DateTime.SpecifyKind(start.Date, DateTimeKind.Utc);
+        var dayEnd = dayStart.AddDays(1);
+
+        var reservationsForDay = await _context.Reservations
+            .AsNoTracking()
+            .Where(r =>
+                r.TableId == tableId &&
+                r.Status != ReservationStatus.Rejected &&
+                r.ReservationDate >= dayStart &&
+                r.ReservationDate < dayEnd)
+            .Select(r => new { r.ReservationDate, r.DurationHours })
             .ToListAsync();
 
-        var hasOverlap = reservations.Any(r => r.Start < end && r.End > start);
-
-        return hasOverlap;
+        return reservationsForDay.Any(r =>
+            r.ReservationDate < end &&
+            r.ReservationDate.AddHours(r.DurationHours) > start);
     }
 
     public async Task<bool> HasAnyForTableAsync(Guid tableId)

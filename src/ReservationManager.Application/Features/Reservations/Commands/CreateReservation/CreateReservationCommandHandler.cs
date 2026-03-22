@@ -2,7 +2,6 @@ using MediatR;
 using ReservationManager.Application.Abstractions.Repositories;
 using ReservationManager.Application.Exceptions;
 using ReservationManager.Domain.Entities;
-using ReservationManager.Domain.Services;
 
 namespace ReservationManager.Application.Features.Reservations.Commands.CreateReservation;
 
@@ -10,16 +9,13 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
 {
     private readonly ITableRepository _tableRepository;
     private readonly IReservationRepository _reservationRepository;
-    private readonly AvailabilityService _availabilityService;
 
     public CreateReservationCommandHandler(
         ITableRepository tableRepository,
-        IReservationRepository reservationRepository,
-        AvailabilityService availabilityService)
+        IReservationRepository reservationRepository)
     {
         _tableRepository = tableRepository;
         _reservationRepository = reservationRepository;
-        _availabilityService = availabilityService;
     }
 
     public async Task<Guid> Handle(CreateReservationCommand request, CancellationToken cancellationToken)
@@ -32,74 +28,30 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
                 "No suitable table available for the selected time and party size.");
         }
 
-        var sortedTables = suitableTables
-            .OrderBy(t => t.Capacity)
-            .ToList();
+        var reservationStart = DateTime.SpecifyKind(
+            request.Date.Date + request.StartTime,
+            DateTimeKind.Utc);
 
-        var tableIds = sortedTables
-            .Select(t => t.Id)
-            .ToList();
-
-        var reservationDayUtc = DateTime.SpecifyKind(request.Date.Date, DateTimeKind.Utc);
-
-        var allReservations = await _reservationRepository.GetByTableIdsAndDateAsync(
-            tableIds,
-            reservationDayUtc);
-
-        var reservationsByTable = allReservations.ToLookup(r => r.TableId);
-
-        var requestedSlotStart = request.StartTime;
-        var requestedSlotEnd = request.StartTime + TimeSpan.FromHours(request.DurationHours);
+        var reservationEnd = reservationStart.AddHours(request.DurationHours);
 
         RestaurantTable? selectedTable = null;
 
-        foreach (var table in sortedTables)
+        foreach (var table in suitableTables.OrderBy(t => t.Capacity))
         {
-            var existingReservations = reservationsByTable[table.Id].ToList();
+            var hasOverlap = await _reservationRepository.IsOverlapAsync(table.Id, reservationStart, reservationEnd);
 
-            var validSlots = _availabilityService.GetValidTimeSlots(
-                existingReservations,
-                request.PartySize,
-                table,
-                reservationDayUtc,
-                request.DurationHours);
-
-            var isValidStartTime = validSlots.Any(slot =>
-                slot.Start == requestedSlotStart && slot.End == requestedSlotEnd);
-
-            if (!isValidStartTime)
+            if (!hasOverlap)
             {
-                continue;
+                selectedTable = table;
+                break;
             }
-
-            var hasOverlap = existingReservations
-                .Where(r => r.Status != ReservationStatus.Rejected)
-                .Any(r =>
-                {
-                    var existingStart = r.ReservationDate.TimeOfDay;
-                    var existingEnd = existingStart + TimeSpan.FromHours(r.DurationHours);
-
-                    return existingStart < requestedSlotEnd && existingEnd > requestedSlotStart;
-                });
-
-            if (hasOverlap)
-            {
-                continue;
-            }
-
-            selectedTable = table;
-            break;
         }
 
         if (selectedTable is null)
         {
             throw new ConflictException(
-                "No suitable table available for the selected time and party size.");
+                "This time slot is no longer available. Please check available slots and try again.");
         }
-
-        var reservationDateTime = DateTime.SpecifyKind(
-            request.Date.Date + request.StartTime,
-            DateTimeKind.Utc);
 
         var reservation = new Reservation(
             id: Guid.NewGuid(),
@@ -107,7 +59,7 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
             customerName: request.CustomerName,
             customerEmail: request.CustomerEmail,
             customerPhone: request.CustomerPhone,
-            reservationDate: reservationDateTime,
+            reservationDate: reservationStart,
             durationHours: request.DurationHours,
             partySize: request.PartySize);
 
