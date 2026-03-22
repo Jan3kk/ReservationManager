@@ -12,12 +12,15 @@ public class AvailabilityService
         List<Reservation> existingReservations,
         int partySize,
         RestaurantTable table,
-        DateTime date)
+        DateTime date,
+        float durationHours)
     {
         if (table.Capacity < partySize)
         {
             return [];
         }
+
+        var bookingDuration = TimeSpan.FromHours(durationHours);
 
         var validSlots = new List<TimeSlot>();
 
@@ -34,11 +37,10 @@ public class AvailabilityService
 
         var currentTime = RestaurantSettings.OpenTime;
 
-        while (currentTime + RestaurantSettings.MinBookingDuration
-            <= RestaurantSettings.CloseTime)
+        while (currentTime + bookingDuration <= RestaurantSettings.CloseTime)
         {
-            var slotDateTime = date.Date + currentTime;
-            var minAllowedDateTime = DateTime.Now.Add(RestaurantSettings.MinAdvanceBookingTime);
+            var slotDateTime = DateTime.SpecifyKind(date.Date + currentTime, DateTimeKind.Utc);
+            var minAllowedDateTime = DateTime.UtcNow.Add(RestaurantSettings.MinAdvanceBookingTime);
 
             if (slotDateTime < minAllowedDateTime)
             {
@@ -46,7 +48,7 @@ public class AvailabilityService
                 continue;
             }
 
-            var candidateEnd = currentTime + RestaurantSettings.MinBookingDuration;
+            var candidateEnd = currentTime + bookingDuration;
 
             if (IsSlotValid(currentTime, candidateEnd, reservationWindows))
             {

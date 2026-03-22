@@ -23,16 +23,6 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
 
     public async Task<List<TimeSlotDto>> Handle(GetAvailableSlotsQuery request, CancellationToken cancellationToken)
     {
-        if (request.DurationHours <= 0)
-        {
-            throw new ArgumentException("Duration must be greater than 0.", nameof(request.DurationHours));
-        }
-
-        if (request.PartySize <= 0)
-        {
-            throw new ArgumentException("Party size must be greater than 0.", nameof(request.PartySize));
-        }
-
         var suitableTables = await _tableRepository.GetByCapacityAsync(request.PartySize);
 
         if (suitableTables.Count == 0)
@@ -44,9 +34,11 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
             .Select(t => t.Id)
             .ToList();
 
+        var reservationDayUtc = DateTime.SpecifyKind(request.Date.Date, DateTimeKind.Utc);
+
         var allReservations = await _reservationRepository.GetByTableIdsAndDateAsync(
             tableIds,
-            request.Date);
+            reservationDayUtc);
 
         var reservationsByTable = allReservations.ToLookup(r => r.TableId);
 
@@ -60,7 +52,8 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
                 existingReservations,
                 request.PartySize,
                 table,
-                request.Date);
+                reservationDayUtc,
+                request.DurationHours);
 
             foreach (var slot in validSlots)
             {
