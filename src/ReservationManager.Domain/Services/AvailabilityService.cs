@@ -5,6 +5,15 @@ namespace ReservationManager.Domain.Services;
 
 public class AvailabilityService
 {
+    private readonly TimeProvider _timeProvider;
+
+    public AvailabilityService(TimeProvider timeProvider)
+    {
+        _timeProvider = timeProvider;
+    }
+
+    public AvailabilityService() : this(TimeProvider.System) { }
+
     private record OccupiedBlock(TimeSpan Start, TimeSpan End);
 
     private record FreeWindow(TimeSpan Start, TimeSpan End, bool EndsAtReservation);
@@ -48,7 +57,7 @@ public class AvailabilityService
                 if (remaining == TimeSpan.Zero || remaining >= minGapAfter)
                 {
                     var slotDateTime = date.Date + candidate;
-                    var minAllowed = DateTime.UtcNow + RestaurantSettings.MinAdvanceBookingTime;
+                    var minAllowed = _timeProvider.GetUtcNow().DateTime + RestaurantSettings.MinAdvanceBookingTime;
 
                     if (slotDateTime >= minAllowed)
                         availableStarts.Add(candidate);

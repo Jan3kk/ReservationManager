@@ -21,6 +21,7 @@ public static class DependencyInjection
 
         services.AddValidatorsFromAssembly(assembly);
 
+        services.AddSingleton(TimeProvider.System);
         services.AddScoped<AvailabilityService>();
 
         return services;

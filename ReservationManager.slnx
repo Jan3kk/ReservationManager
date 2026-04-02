@@ -5,4 +5,8 @@
     <Project Path="src/ReservationManager.Domain/ReservationManager.Domain.csproj" />
     <Project Path="src/ReservationManager.Infrastructure/ReservationManager.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ReservationManager.Application.Tests/ReservationManager.Application.Tests.csproj" />
+    <Project Path="tests/ReservationManager.Domain.Tests/ReservationManager.Domain.Tests.csproj" />
+  </Folder>
 </Solution>
