@@ -1,3 +1,5 @@
+using ReservationManager.Domain.Settings;
+
 namespace ReservationManager.Domain.Entities;
 
 public class Reservation
@@ -39,17 +41,20 @@ public class Reservation
         if (string.IsNullOrWhiteSpace(customerPhone))
             throw new ArgumentException("Customer phone cannot be empty.", nameof(customerPhone));
 
-        if (reservationDate <= DateTime.UtcNow)
-            throw new ArgumentException("Reservation date must be in the future.", nameof(reservationDate));
+        var minDuration = (float)RestaurantSettings.MinBookingDuration.TotalHours;
+        var maxDuration = (float)RestaurantSettings.MaxBookingDuration.TotalHours;
+        if (durationHours < minDuration || durationHours > maxDuration)
+            throw new ArgumentOutOfRangeException(nameof(durationHours),
+                $"Duration must be between {minDuration} and {maxDuration} hours.");
 
-        if (durationHours < 1 || durationHours > 3)
-            throw new ArgumentOutOfRangeException(nameof(durationHours), "Duration must be between 1 and 3 hours.");
+        var incrementMinutes = RestaurantSettings.DurationIncrement.TotalMinutes;
+        if (durationHours * 60 % incrementMinutes != 0)
+            throw new ArgumentException(
+                $"Duration must be in {incrementMinutes}-minute increments.", nameof(durationHours));
 
-        if ((durationHours * 2) % 1 != 0)
-            throw new ArgumentException("Duration must be in 0.5 hour increments.", nameof(durationHours));
-
-        if (partySize < 1)
-            throw new ArgumentOutOfRangeException(nameof(partySize), "Party size must be at least 1.");
+        if (partySize < RestaurantSettings.MinPartySize || partySize > RestaurantSettings.MaxPartySize)
+            throw new ArgumentOutOfRangeException(nameof(partySize),
+                $"Party size must be between {RestaurantSettings.MinPartySize} and {RestaurantSettings.MaxPartySize}.");
 
         Id = id;
         TableId = tableId;

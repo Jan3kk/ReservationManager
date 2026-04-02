@@ -1,6 +1,5 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using ReservationManager.Application.DTOs;
 using ReservationManager.Application.Features.Availability.Queries.GetAvailableSlots;
 
 namespace ReservationManager.Api.Controllers;
@@ -17,7 +16,7 @@ public class AvailabilityController : ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(List<TimeSlotDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<TimeSpan>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetAvailableSlots(
         [FromQuery] DateTime date,

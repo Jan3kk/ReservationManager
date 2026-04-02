@@ -10,11 +10,11 @@ public static class RestaurantSettings
 
     public static TimeSpan MaxBookingDuration => TimeSpan.FromHours(3.0);
 
-    public static TimeSpan SlotInterval => TimeSpan.FromMinutes(30);
+    public static TimeSpan BufferTime => TimeSpan.FromMinutes(15);
 
     public static TimeSpan DurationIncrement => TimeSpan.FromMinutes(30);
 
-    public static TimeSpan MinAdvanceBookingTime = TimeSpan.FromHours(2);
+    public static TimeSpan MinAdvanceBookingTime => TimeSpan.FromHours(2);
 
     public static int MinPartySize => 1;
 

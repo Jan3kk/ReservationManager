@@ -26,7 +26,7 @@ public class TablesController : ControllerBase
     {
         var tableId = await _sender.Send(command);
 
-        return CreatedAtAction(nameof(GetAll), new { id = tableId }, tableId);
+        return CreatedAtAction(nameof(GetById), new { id = tableId }, tableId);
     }
 
     [HttpGet]
@@ -36,6 +36,19 @@ public class TablesController : ControllerBase
         var tables = await _sender.Send(new GetAllTablesQuery());
 
         return Ok(tables);
+    }
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(TableDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var table = await _sender.Send(new GetTableByIdQuery(id));
+
+        if (table is null)
+            return NotFound();
+
+        return Ok(table);
     }
 
     [HttpDelete("{id:guid}")]

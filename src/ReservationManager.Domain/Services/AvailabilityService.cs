@@ -1,116 +1,84 @@
 using ReservationManager.Domain.Entities;
-using ReservationManager.Domain.Models;
 using ReservationManager.Domain.Settings;
 
 namespace ReservationManager.Domain.Services;
 
 public class AvailabilityService
 {
-    private record ReservationWindow(TimeSpan Start, TimeSpan End);
+    private record OccupiedBlock(TimeSpan Start, TimeSpan End);
 
-    public List<TimeSlot> GetValidTimeSlots(
+    private record FreeWindow(TimeSpan Start, TimeSpan End, bool EndsAtReservation);
+
+    public List<TimeSpan> GetAvailableStartTimes(
         List<Reservation> existingReservations,
         int partySize,
         RestaurantTable table,
-        DateTime date)
+        DateTime date,
+        TimeSpan requestedDuration)
     {
         if (table.Capacity < partySize)
-        {
             return [];
-        }
 
-        var validSlots = new List<TimeSlot>();
-
-        var reservationsForDate = existingReservations
+        var occupiedBlocks = existingReservations
             .Where(r => r.ReservationDate.Date == date.Date
-                && r.Status != ReservationStatus.Rejected)
-            .ToList();
-
-        var reservationWindows = reservationsForDate
-            .Select(r => new ReservationWindow(
+                        && r.Status != ReservationStatus.Rejected)
+            .Select(r => new OccupiedBlock(
                 r.ReservationDate.TimeOfDay,
                 r.ReservationDate.TimeOfDay + TimeSpan.FromHours(r.DurationHours)))
+            .OrderBy(b => b.Start)
             .ToList();
 
-        var currentTime = RestaurantSettings.OpenTime;
+        var freeWindows = BuildFreeWindows(occupiedBlocks);
+        var gridStep = RestaurantSettings.MinBookingDuration + RestaurantSettings.BufferTime;
+        var minGapAfter = RestaurantSettings.BufferTime + RestaurantSettings.MinBookingDuration;
+        var availableStarts = new List<TimeSpan>();
 
-        while (currentTime + RestaurantSettings.MinBookingDuration
-            <= RestaurantSettings.CloseTime)
+        foreach (var window in freeWindows)
         {
-            var slotDateTime = date.Date + currentTime;
-            var minAllowedDateTime = DateTime.Now.Add(RestaurantSettings.MinAdvanceBookingTime);
+            var deadline = window.EndsAtReservation
+                ? window.End - RestaurantSettings.BufferTime
+                : window.End;
 
-            if (slotDateTime < minAllowedDateTime)
+            var candidate = window.Start;
+
+            while (candidate + requestedDuration <= deadline)
             {
-                currentTime += RestaurantSettings.SlotInterval;
-                continue;
+                var remaining = deadline - (candidate + requestedDuration);
+
+                if (remaining == TimeSpan.Zero || remaining >= minGapAfter)
+                {
+                    var slotDateTime = date.Date + candidate;
+                    var minAllowed = DateTime.UtcNow + RestaurantSettings.MinAdvanceBookingTime;
+
+                    if (slotDateTime >= minAllowed)
+                        availableStarts.Add(candidate);
+                }
+
+                candidate += gridStep;
             }
-
-            var candidateEnd = currentTime + RestaurantSettings.MinBookingDuration;
-
-            if (IsSlotValid(currentTime, candidateEnd, reservationWindows))
-            {
-                validSlots.Add(new TimeSlot(currentTime, candidateEnd));
-            }
-
-            currentTime += RestaurantSettings.SlotInterval;
         }
 
-        return validSlots;
+        return availableStarts;
     }
 
-    private static bool IsSlotValid(
-        TimeSpan slotStart,
-        TimeSpan slotEnd,
-        List<ReservationWindow> reservationWindows)
+    private static List<FreeWindow> BuildFreeWindows(List<OccupiedBlock> occupiedBlocks)
     {
-        foreach (var reservation in reservationWindows)
+        var windows = new List<FreeWindow>();
+        var windowStart = RestaurantSettings.OpenTime;
+
+        foreach (var block in occupiedBlocks)
         {
-            if (slotStart < reservation.End && slotEnd > reservation.Start)
-            {
-                return false;
-            }
+            if (block.Start > windowStart)
+                windows.Add(new FreeWindow(windowStart, block.Start, EndsAtReservation: true));
+
+            var blockEnd = block.End + RestaurantSettings.BufferTime;
+            if (blockEnd > windowStart)
+                windowStart = blockEnd;
         }
 
-        var previousReservation = reservationWindows
-            .Where(r => r.End <= slotStart)
-            .OrderByDescending(r => r.End)
-            .FirstOrDefault();
+        if (windowStart < RestaurantSettings.CloseTime)
+            windows.Add(new FreeWindow(windowStart, RestaurantSettings.CloseTime, EndsAtReservation: false));
 
-        if (previousReservation is not null)
-        {
-            var gapBefore = slotStart - previousReservation.End;
-
-            if (gapBefore > TimeSpan.Zero && gapBefore < RestaurantSettings.MinBookingDuration)
-            {
-                return false;
-            }
-        }
-
-        var nextReservation = reservationWindows
-            .Where(r => r.Start >= slotEnd)
-            .OrderBy(r => r.Start)
-            .FirstOrDefault();
-
-        if (nextReservation is not null)
-        {
-            var gapAfter = nextReservation.Start - slotEnd;
-
-            if (gapAfter > TimeSpan.Zero && gapAfter < RestaurantSettings.MinBookingDuration)
-            {
-                return false;
-            }
-        }
-        else
-        {
-            var gapToClose = RestaurantSettings.CloseTime - slotEnd;
-
-            if (gapToClose > TimeSpan.Zero && gapToClose < RestaurantSettings.MinBookingDuration)
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return windows;
     }
 }

@@ -23,6 +23,8 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
 
     public async Task<Guid> Handle(CreateReservationCommand request, CancellationToken cancellationToken)
     {
+        var requestedDuration = TimeSpan.FromHours(request.DurationHours);
+
         var suitableTables = await _tableRepository.GetByCapacityAsync(request.PartySize);
 
         if (suitableTables.Count == 0)
@@ -45,45 +47,24 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
 
         var reservationsByTable = allReservations.ToLookup(r => r.TableId);
 
-        var requestedSlotStart = request.StartTime;
-        var requestedSlotEnd = request.StartTime + TimeSpan.FromHours(request.DurationHours);
-
         RestaurantTable? selectedTable = null;
 
         foreach (var table in sortedTables)
         {
             var existingReservations = reservationsByTable[table.Id].ToList();
 
-            var validSlots = _availabilityService.GetValidTimeSlots(
+            var availableStarts = _availabilityService.GetAvailableStartTimes(
                 existingReservations,
                 request.PartySize,
                 table,
-                request.Date);
+                request.Date,
+                requestedDuration);
 
-            var isValidStartTime = validSlots.Any(slot => slot.Start == requestedSlotStart);
-
-            if (!isValidStartTime)
+            if (availableStarts.Contains(request.StartTime))
             {
-                continue;
+                selectedTable = table;
+                break;
             }
-
-            var hasOverlap = existingReservations
-                .Where(r => r.Status != ReservationStatus.Rejected)
-                .Any(r =>
-                {
-                    var existingStart = r.ReservationDate.TimeOfDay;
-                    var existingEnd = existingStart + TimeSpan.FromHours(r.DurationHours);
-
-                    return existingStart < requestedSlotEnd && existingEnd > requestedSlotStart;
-                });
-
-            if (hasOverlap)
-            {
-                continue;
-            }
-
-            selectedTable = table;
-            break;
         }
 
         if (selectedTable is null)

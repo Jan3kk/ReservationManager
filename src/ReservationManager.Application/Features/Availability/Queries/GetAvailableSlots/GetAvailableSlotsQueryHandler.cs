@@ -1,11 +1,10 @@
 using MediatR;
 using ReservationManager.Application.Abstractions.Repositories;
-using ReservationManager.Application.DTOs;
 using ReservationManager.Domain.Services;
 
 namespace ReservationManager.Application.Features.Availability.Queries.GetAvailableSlots;
 
-public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQuery, List<TimeSlotDto>>
+public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQuery, List<TimeSpan>>
 {
     private readonly ITableRepository _tableRepository;
     private readonly IReservationRepository _reservationRepository;
@@ -21,24 +20,14 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
         _availabilityService = availabilityService;
     }
 
-    public async Task<List<TimeSlotDto>> Handle(GetAvailableSlotsQuery request, CancellationToken cancellationToken)
+    public async Task<List<TimeSpan>> Handle(GetAvailableSlotsQuery request, CancellationToken cancellationToken)
     {
-        if (request.DurationHours <= 0)
-        {
-            throw new ArgumentException("Duration must be greater than 0.", nameof(request.DurationHours));
-        }
-
-        if (request.PartySize <= 0)
-        {
-            throw new ArgumentException("Party size must be greater than 0.", nameof(request.PartySize));
-        }
+        var requestedDuration = TimeSpan.FromHours(request.DurationHours);
 
         var suitableTables = await _tableRepository.GetByCapacityAsync(request.PartySize);
 
         if (suitableTables.Count == 0)
-        {
             return [];
-        }
 
         var tableIds = suitableTables
             .Select(t => t.Id)
@@ -50,26 +39,27 @@ public class GetAvailableSlotsQueryHandler : IRequestHandler<GetAvailableSlotsQu
 
         var reservationsByTable = allReservations.ToLookup(r => r.TableId);
 
-        var uniqueSlots = new HashSet<TimeSlotDto>();
+        var uniqueStarts = new HashSet<TimeSpan>();
 
         foreach (var table in suitableTables)
         {
             var existingReservations = reservationsByTable[table.Id].ToList();
 
-            var validSlots = _availabilityService.GetValidTimeSlots(
+            var availableStarts = _availabilityService.GetAvailableStartTimes(
                 existingReservations,
                 request.PartySize,
                 table,
-                request.Date);
+                request.Date,
+                requestedDuration);
 
-            foreach (var slot in validSlots)
+            foreach (var start in availableStarts)
             {
-                uniqueSlots.Add(new TimeSlotDto(slot.Start, slot.End));
+                uniqueStarts.Add(start);
             }
         }
 
-        return uniqueSlots
-            .OrderBy(s => s.Start)
+        return uniqueStarts
+            .OrderBy(s => s)
             .ToList();
     }
 }

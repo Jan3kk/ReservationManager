@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using ReservationManager.Application.DTOs;
 using ReservationManager.Application.Features.Reservations.Commands.CreateReservation;
+using ReservationManager.Application.Features.Reservations.Queries.GetReservationById;
 
 namespace ReservationManager.Api.Controllers;
 
@@ -27,11 +29,15 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ReservationDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(Guid id)
     {
-        // TODO: Implement GetReservationByIdQuery
-        return Ok(id);
+        var reservation = await _sender.Send(new GetReservationByIdQuery(id));
+
+        if (reservation is null)
+            return NotFound();
+
+        return Ok(reservation);
     }
 }

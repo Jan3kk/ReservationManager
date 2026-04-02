@@ -20,8 +20,8 @@ public class RestaurantTable
         if (string.IsNullOrWhiteSpace(label))
             throw new ArgumentException("Label cannot be empty.", nameof(label));
 
-        if (capacity < 2 || capacity > 10)
-            throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be between 2 and 10.");
+        if (capacity < 1 || capacity > 50)
+            throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be between 1 and 50.");
 
         Id = id;
         UniqueName = uniqueName;

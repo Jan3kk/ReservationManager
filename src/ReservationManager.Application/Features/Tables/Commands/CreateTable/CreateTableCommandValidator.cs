@@ -15,7 +15,7 @@ public class CreateTableCommandValidator : AbstractValidator<CreateTableCommand>
             .WithMessage("Label is required.");
 
         RuleFor(x => x.Capacity)
-            .InclusiveBetween(2, 10)
-            .WithMessage("Capacity must be between 2 and 10.");
+            .InclusiveBetween(1, 50)
+            .WithMessage("Capacity must be between 1 and 50.");
     }
 }
